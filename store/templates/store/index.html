@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Store</title>
-</head>
-<body>
-    {% if name %} <h1>Hello Maru</h1>
-    {% else  %} <h1>Hello Elsi</h1>
-    {% endif %}
-</body>
+  </head>
+  <body>
+    {% for i in name %}
+    <ul>
+      {% comment %}
+      <li>{{i.pk}} {{i.customer.first_name}} {{i.order_items.all}}</li>
+      {% endcomment %}
+      <li>{{i}}</li>
+    </ul>
+    {% endfor %}
+  </body>
 </html>
