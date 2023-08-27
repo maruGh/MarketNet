@@ -24,9 +24,9 @@ class Collection(models.Model):
 class Product(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
-    slug = models.SlugField(default="-")
+    slug = models.SlugField(null=True, blank=True)
     unit_price = models.DecimalField(
-        max_digits=6, decimal_places=4, validators=[MinValueValidator(10)])
+        max_digits=6, decimal_places=2, validators=[MinValueValidator(10)])
     inventory = models.PositiveIntegerField()
     last_update = models.DateTimeField(auto_now=True)
     collection = models.ForeignKey(
@@ -38,6 +38,14 @@ class Product(models.Model):
 
     class Meta:
         ordering = ['title']
+
+
+class Review(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name='reviews')
+    date = models.DateField(auto_now=True)
 
 
 class Customer(models.Model):
