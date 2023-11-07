@@ -77,14 +77,17 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
+    autocomplete_fields = ['user']
     list_display = ['id', 'get_full_name', 'membership', 'orders_count']
     list_editable = ['membership']
+    list_select_related = ['user']
     list_per_page = 10
-    search_fields = ['first_name__istartswith', 'last_name__istartswith']
+    search_fields = ['user__first_name__istartswith',
+                     'user__last_name__istartswith']
 
-    @admin.display(ordering='first_name')
+    @admin.display(ordering='user__first_name')
     def get_full_name(self, customer: Customer):
-        return f'{customer.first_name} {customer.last_name}'
+        return f'{customer.user.first_name} {customer.user.last_name}'
     get_full_name.short_description = 'Full name'
 
     @admin.display(ordering='orders_count')
@@ -139,3 +142,14 @@ class OrderItemAdmin(admin.ModelAdmin):
     list_per_page = 10
     list_select_related = ['product', 'order']
     list_editable = ['unit_price']
+
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    list_display = ['id', 'created_at']
+
+
+@admin.register(CartItem)
+class CartItemAdmin(admin.ModelAdmin):
+    list_display = ['id', 'cart_id', 'product', 'quantity']
+    autocomplete_fields = ['product']

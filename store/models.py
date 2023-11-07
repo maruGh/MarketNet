@@ -1,7 +1,10 @@
 from typing import Iterable, Optional
+from django.conf import settings
+from django.contrib import admin
 from django.db import models
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
+from uuid import uuid4
 
 
 class Promotion(models.Model):
@@ -53,20 +56,30 @@ class Customer(models.Model):
     SILVER = 'S'
     GOLDEN = 'G'
 
-    first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255)
-    email = models.EmailField(unique=True, max_length=255)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     phone = models.CharField(max_length=255, validators=[
                              RegexValidator(regex='^(0|\+)[0-9]+')])
     membership = models.CharField(
-        choices=[(BRONZE, 'Bronze'), (SILVER, 'Silver'), (GOLDEN, 'Golden')], max_length=1)
+        choices=[(BRONZE, 'Bronze'), (SILVER, 'Silver'), (GOLDEN, 'Golden')], default=SILVER, max_length=1)
     birth_date = models.DateField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.first_name} {self.last_name}'
+        return f'{self.user.first_name} {self.user.last_name}'
+
+    @admin.display(ordering='user__first_name')
+    def first_name(self):
+        return self.user.first_name
+
+    @admin.display(ordering='user__last_name')
+    def last_name(self):
+        return self.user.last_name
 
     class Meta:
-        ordering = ['first_name', 'last_name']
+        permissions = [
+            ('view_history', 'Can view history')
+        ]
+        ordering = ['user__first_name', 'user__last_name']
 
 
 class Order(models.Model):
@@ -82,6 +95,11 @@ class Order(models.Model):
     def __str__(self) -> str:
         return self.payment_status
 
+    class Meta:
+        permissions = [
+            ('cancel_order', 'Can cancel order')
+        ]
+
 
 class OrderItem(models.Model):
     quantity = models.PositiveIntegerField()
@@ -96,6 +114,7 @@ class OrderItem(models.Model):
 
 
 class Cart(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -105,3 +124,6 @@ class CartItem(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.PROTECT, related_name='cart_items')
     quantity = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = [('cart', 'product')]

@@ -12,3 +12,4 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(TaggedItem)
 class TaggedItemAdmin(admin.ModelAdmin):
     list_display = ['id', 'tag', 'content_type', 'object_id', 'content_object']
+    autocomplete_fields = ['tag']
