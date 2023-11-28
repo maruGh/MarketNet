@@ -47,13 +47,41 @@ class CollectionAdmin(admin.ModelAdmin):
         return super().get_queryset(request).annotate(products_count=Count('products'))
 
 
+@admin.register(ProductImage)
+class ProductImageAdmin(admin.ModelAdmin):
+    list_display = ['id', 'image_', 'product']
+    search_fields = ['product__title']
+    list_select_related = ['product']
+
+    def image_(self, product_image: ProductImage):
+        return format_html(f'<a href="{product_image.image.url}"> <img src={product_image.image.url} class="icon" /></a> ')
+
+    class Media:
+        css = {
+            'all': ['store/style.css']
+        }
+
+
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    # fields = ['image', 'thumbnail']
+    readonly_fields = ['thumbnail']
+    min_num = 0
+    extra = 1
+
+    def thumbnail(self, product_image: ProductImage):
+        if product_image.image:
+            return format_html(f'<img src={product_image.image.url} class="thumbnail" />')
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     actions = ['clear_inventory']
     autocomplete_fields = ['collection']
+    inlines = [ProductImageInline]
     list_filter = ['last_update', 'collection', InventoryFilter]
     filter_horizontal = ['promotions']
-    list_display = ['id', 'title', 'unit_price', 'inventory',
+    list_display = ['id', 'images', 'title', 'unit_price', 'inventory',
                     'last_update', 'collection', 'inventory_status']
     list_editable = ['unit_price']
     list_per_page = 10
@@ -61,6 +89,15 @@ class ProductAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ['title'], 'description': ['title']}
     search_fields = ['title']
     # readonly_fields = ['']
+
+    def images(self, product: Product):
+        url = reverse('admin:store_productimage_changelist') + \
+            '?'+f'product_id={product.id}'
+
+        return format_html(f"<a href={url}>{product.images_count}</a>")
+
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
+        return super().get_queryset(request).annotate(images_count=Count('images'))
 
     @admin.display(ordering='inventory')
     def inventory_status(self, product: Product):
@@ -73,6 +110,11 @@ class ProductAdmin(admin.ModelAdmin):
         updated_count = queryset.update(inventory=0)
         self.message_user(
             request, f'{updated_count} products were successfully updated. ')
+
+    class Media:
+        css = {
+            'all': ['store/style.css']
+        }
 
 
 @admin.register(Customer)
@@ -102,8 +144,8 @@ class CustomerAdmin(admin.ModelAdmin):
 
 class OrderItemInline(admin.TabularInline):
     autocomplete_fields = ['product']
-    extra = 0
-    min_num = 1
+    extra = 1
+    min_num = 0
     model = OrderItem
 
 
@@ -138,7 +180,7 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
-    list_display = ['id', 'order', 'product', 'quantity', 'unit_price']
+    list_display = ['id', 'order_id', 'product', 'quantity', 'unit_price']
     list_per_page = 10
     list_select_related = ['product', 'order']
     list_editable = ['unit_price']

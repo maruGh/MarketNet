@@ -1,12 +1,51 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.core.mail import mail_admins, EmailMessage, send_mail, send_mass_mail, BadHeaderError
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, F, Count, Max, Avg, Sum, Value, Func, ExpressionWrapper, DecimalField
 from django.db.transaction import atomic
+from django.template.loader import render_to_string
 
 from tags.models import TaggedItem
 from .models import *
+from .tasks import send_email_to_all_user
 from likes.models import Like
+
+
+def back_task(request):
+    send_email_to_all_user.delay(request.user.username, context={
+        'name': request.user.username})
+    return HttpResponse('<h1>Background task [sending email to all user]</br> is running with out affecting this main app </h1>')
+
+
+def hello(request):
+    try:
+        # send_mail(subject='subject1', message='replay me when u are available',
+        #           from_email=None,
+        #           recipient_list=['marudemamu833@gmail.com', 'recipient1@gmail.com'])
+
+        # send_mass_mail([['subject...', 'message....', None, [
+        #                'recipient1@gmail.com', 'recipient2@gmail.com']]])
+
+        # mail_admins('admin_subject', 'plain text message',
+        #             html_message='<h1>HTML admin message</h1>')
+
+        html_message = render_to_string(
+            'email/welcome.html', {'name': 'Mistrawit'})
+
+        message = EmailMessage('subj', None, None, [
+                               'mesifkr926@gmail.com', 'marugithub@gmail.com'])
+        message.content_subtype = 'html'
+        message.body = html_message
+        message.attach_file('media/store/images/20230621_060448_0.jpg')
+        message.send()
+
+        # message = EmailMessage('email/welcome.tpl', {'name': 'Maru'})
+        # message.send()
+
+    except Exception as e:
+        print(e)
+    return HttpResponse('<h1>Hello</h1>')
 
 
 def index(request):

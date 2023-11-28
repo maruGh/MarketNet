@@ -12,6 +12,14 @@ django-filter = "*"
 djoser = "*"
 djangorestframework-simplejwt = "*"
 social-auth-app-django = "*"
+pillow = "*"
+django-cors-headers = "*"
+django-templated-mail = "*"
+django-mail-templated = "*"
+python-decouple = "*"
+redis = {extras = ["hiredis"], version = "*"}
+celery = {extras = ["redis"], version = "*"}
+flower = "*"
 
 [dev-packages]
 

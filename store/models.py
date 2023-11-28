@@ -1,9 +1,9 @@
 from typing import Iterable, Optional
 from django.conf import settings
+from django.core.validators import RegexValidator, MinValueValidator, FileExtensionValidator
+from django.core.exceptions import ValidationError
 from django.contrib import admin
 from django.db import models
-from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
-from django.core.exceptions import ValidationError
 from uuid import uuid4
 
 
@@ -41,6 +41,26 @@ class Product(models.Model):
 
     class Meta:
         ordering = ['title']
+
+
+class ProductImage(models.Model):
+
+    def validate_file_size(file):
+        max_size = 10*100
+        # print(file.size/1000)
+        if file.size/1000 > max_size:
+            raise ValidationError(f'File size must be less than {max_size} kb')
+
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name='images')
+    image = models.FileField(upload_to='store/images',
+                             validators=[
+                                 validate_file_size,
+                                 FileExtensionValidator(allowed_extensions=['jpg', 'png', 'jpeg'])])
+    description = models.TextField(blank=True, null=True)
+
+    class Meta:
+        unique_together = ('image', 'product')
 
 
 class Review(models.Model):
@@ -104,8 +124,8 @@ class Order(models.Model):
 class OrderItem(models.Model):
     quantity = models.PositiveIntegerField()
     order = models.ForeignKey(
-        Order, on_delete=models.PROTECT, related_name='order_items')
-    unit_price = models.DecimalField(max_digits=6, decimal_places=4)
+        Order, on_delete=models.CASCADE, related_name='order_items')
+    unit_price = models.DecimalField(max_digits=6, decimal_places=2)
     product = models.ForeignKey(
         Product, on_delete=models.PROTECT, related_name='order_items')
 
@@ -124,6 +144,13 @@ class CartItem(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.PROTECT, related_name='cart_items')
     quantity = models.PositiveIntegerField()
+
+    def clean(self) -> None:
+        if self.quantity > self.product.inventory:
+            raise ValidationError('Quantity must be less than inventory')
+
+    def __str__(self) -> str:
+        return f'{self.quantity} quantities added'
 
     class Meta:
         unique_together = [('cart', 'product')]
