@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, SAFE_METHOD
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework import status
 
+from .signals import trash_object
 from .permissions import IsAdminOrReadOnly, IsMyCustomerProfileOrReadOnly, ViewCustomerHistoryPermission
 from .filters import ProductFilter
 from .models import Cart, CartItem, Collection, Customer, Order, Product, ProductImage, Review
@@ -27,6 +28,8 @@ class CollectionViewSet(ModelViewSet):
         collection = get_object_or_404(Collection, pk=kwargs['pk'])
         if collection.products.count() > 0:
             return Response({'error': 'it have products'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        trash_object.send_robust(self.__class__, item=collection)
         return super().destroy(request, *args, **kwargs)
 
 

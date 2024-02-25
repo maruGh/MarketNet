@@ -1,16 +1,16 @@
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_delete, pre_save, post_delete
 from django.dispatch import receiver
 from django.conf import settings
 from django.core.exceptions import ValidationError
+# from rest_framework.exceptions import ValidationError
 
-from store.models import CartItem, Customer
+from store.models import CartItem, Collection, Customer
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_customer_for_new_user(sender, instance, **kwargs):
     if kwargs['created']:
         Customer.objects.create(user=instance)
-
 
 # @receiver(pre_save, sender=CartItem)
 # def validate_quantity_amount_for_cart_item(sender, instance: CartItem, **kwargs):
