@@ -1,6 +1,7 @@
-from typing import Iterable, Optional
+
 from django.conf import settings
-from django.core.validators import RegexValidator, MinValueValidator, FileExtensionValidator
+from django.core.validators import RegexValidator, MinValueValidator, \
+    FileExtensionValidator
 from django.core.exceptions import ValidationError
 from django.contrib import admin
 from django.db import models
@@ -15,7 +16,8 @@ class Promotion(models.Model):
 class Collection(models.Model):
     title = models.CharField(max_length=255)
     featured_product = models.ForeignKey(
-        'Product', on_delete=models.SET_NULL, null=True, blank=True, related_name='collections')
+        'Product', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='collections')
 
     def __str__(self) -> str:
         return self.title
@@ -53,10 +55,11 @@ class ProductImage(models.Model):
 
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name='images')
-    image = models.FileField(upload_to='store/images',
-                             validators=[
-                                 validate_file_size,
-                                 FileExtensionValidator(allowed_extensions=['jpg', 'png', 'jpeg'])])
+    image = models.FileField(
+        upload_to='store/images',
+        validators=[
+            validate_file_size,
+            FileExtensionValidator(allowed_extensions=['jpg', 'png', 'jpeg'])])
     description = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -81,7 +84,8 @@ class Customer(models.Model):
     phone = models.CharField(max_length=255, validators=[
                              RegexValidator(regex='^(0|\+)[0-9]+')])
     membership = models.CharField(
-        choices=[(BRONZE, 'Bronze'), (SILVER, 'Silver'), (GOLDEN, 'Golden')], default=SILVER, max_length=1)
+        choices=[(BRONZE, 'Bronze'), (SILVER, 'Silver'), (GOLDEN, 'Golden')],
+        default=SILVER, max_length=1)
     birth_date = models.DateField(auto_now_add=True)
 
     def __str__(self):
@@ -107,7 +111,8 @@ class Order(models.Model):
     COMPLETE = 'C'
     FAIL = 'F'
     payment_status = models.CharField(choices=[(
-        PENDING, 'Pending'), (COMPLETE, 'Complete'), (FAIL, 'Failed')], default=PENDING, max_length=1)
+        PENDING, 'Pending'), (COMPLETE, 'Complete'), (FAIL, 'Failed')],
+        default=PENDING, max_length=1)
     customer = models.ForeignKey(
         Customer, on_delete=models.CASCADE, related_name='orders')
     placed_at = models.DateTimeField(auto_now_add=True)

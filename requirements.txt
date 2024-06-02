@@ -27,7 +27,6 @@ hiredis==2.2.3
 humanize==4.9.0
 idna==3.4
 kombu==5.3.4
-mysqlclient==2.2.0
 oauthlib==3.2.2
 Pillow==10.1.0
 prometheus-client==0.19.0
